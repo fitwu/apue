@@ -1,0 +1,87 @@
+0	  STDIN_FILENO
+1     STDOUT_FILENO
+2     STDERR_FILENO
+定义在 <unistd.h>
+1、open 函数
+         #incldue <fcntl.h>
+          int open (const char *pathname, in oflag, ... /* mode_t mode  */)
+               oflag:一个或者多个常量进行“或”运算构成
+                    O_RDONLY   : read only
+                    O_WRONLY  : write only
+                    O_RDWR      : read write
+                    O_APPEND ：追加文件尾端；
+                    O_CREAT :    如果没存在，则创建 需要 第三个参数 mode 用来设置文件的访问权限位；
+                    O_EXCL:  如果同时指定了O_CREAT，而文件已存在，则出错。可以测试文件是否存在，如果不存在，则创建，此处的测试和创建是原子操作；
+                    O_TRUNC：如果文件存在，而且为只写或者读写打开，则将其长度截短为0； （truncate 截断）
+                    O_NONBLOCK:非阻塞模式
+                    O_SYNC :等待写完成；（数据和属性）
+                    O_DSYNC：等待写完成；（只有数据）
+                    O_RSYNC：同步读，写；
+2、creat 函数
+          #incldue <fcntl.h>
+          int creat (const char *pathname, mode_t mode );
+               等效open (pathname, O_RDWR | O_CREAT | O_TRUNC,  mode  )
+3、close 函数
+          #include <unistd.h>
+          int close ( int filedes)；
+          当一个进程终止时，内核自动关闭它所有打开的文件；
+       
+4、lseek 函数
+          #include <unistd.h>
+          off_t lseek ( int filedes, off_t offset, int whence);
+         
+               whence:  SEEK_SET 偏移量设置为从距文件开始offset个字节；
+                              SEEK_CUR  。。。设置为当前值加offset个字节  offset可正可负；
+                              SEEK_END 。。。设置为文件长度加offset个字节offset可正可负；
+               偏移量大于文件当前长度 ，则产生空洞；空洞并不占用磁盘上的存储空间；
+	lseek 只修改当前文件表项中的偏移量，不做任何I/O操作
+5、read 函数
+          #include <unistd.h>
+          ssize_t read ( int filedes, void *buf, size_t nbytes);
+         
+           如果成功返回则返回读到的字节书  如果已经到文件结尾，则返回0；出错返回-1；
+          从终端设备读时，通常一次最多读一行；
+ 
+6、write 函数
+          #include <unistd.h>
+          ssize_t write ( int filedes, const void *buf, size_t nbytes);
+               返回值通常等于nbytes，否则出错。
+         
+7、原子操作
+8、dup 和 dup2 函数
+          #include <unistd.h>
+          int     dup ( int filedes);
+          int     dup2 (int filedes, int filedes2);
+          复制现存的文件描述符。经常用来重定向 进程的 STDIN, STDOUT, STDERR。
+    
+          由dup返回的新文件描述符一定是当前可用文件描述符中最小值;
+          而dup2返回filedes2参数指定新描述符的数值。如果负filedes2已经打开，将其先关闭；如果filedes = filedes2，则不关闭；
+          dup (filedes); 等效于  fcntl (filedes, F_DUPFD, 0);
+          dup2 (filedes , filedes2);
+          等效于 
+               close (filedes2);
+               fcntl (filedes, F_DUPFD， filedes2);
+               不同的是dup2是原子操作，而close，fcntl则包括两个函数调用。
+9、fcntl 函数
+          #include <fcntl.h>
+          int fcntl (int filedes , int cmd, ...  /* int arg */);
+         
+          第三个参数是个整数；
+          fcntl有5种功能：
+
+                    （1）复制一个现有的描述符 cdm = F_DUPFD;
+
+                    （2）获得/设置文件描述符标记 cmd = F_GETFD或者F_SETFD;
+
+                    （3）获得/设置文件状态标志  cmd = F_GETFL或者F_SETFL;
+
+                    （4）获得/设置异步I/O所有权 cdm = F_GETOWN或F_SETOWN;
+
+                    （5）获得/设置记录锁 cmd =F_GETLK 、F_SETLK或F_SETLWK; 第三个参数是指向一个结构的指针。
+
+               F_GETFD , F_SETFD;    有定义的文件描述符标志 FD_CLOEXEC;
+
+               F_GETFL, F_SETFL;  在说明open函数时，以说明文件状态标志；SETFL不能改变 只读，只写，读写三个，其他的可以更改。
+               F_GETOWN :取当前接受SIGIO SIGURG信号的进程ID或进程组ID。
+               F_SETOWN :设置接受SIGIO SIGURG信号的进程ID或进程组ID，arg指定一个进程ID。
+

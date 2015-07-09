@@ -1,0 +1,95 @@
+1. 进程组
+
+	#include<unistd.h>
+	pid_t getpgrp(void);
+
+	pid_t getpgid(pid_t pid);
+
+
+	进程组： 组长进程可以创建一个进程组，组长进程的ID就是这个进程组的ID
+			进程组长可以终止，但是只要进程组中有进程，进程组就存在
+
+			最后一个进程可以终止，也可以转移到另一个进程组
+
+	
+	进程可以通过调用setpgid来加入一个现有的组或者创建一个新进程组；
+
+	#include<unistd.h>
+	int setpgid(pid_t pid, pid_t pgid);
+
+	pid == pgid：	pid为进程组组长
+	pid == 0：		使用调用者的进程ID
+	pgid == 0：		有pid指定的进程为进程组组长
+
+2. 会话
+	
+	一个或多个进程组的集合；
+	进程调用setsid函数建立一个新会话
+
+	#include<unistd.h>
+	pid_t setsid(void);
+	//调用此函数的进程不能是一个进程组组长。
+	
+	如果是进程组长调用，则返回出错
+	一般为了避免，会调用fork 然后终止父进程
+
+
+	调用后：
+		1) 此经陈变成新会话首进程。此时，该进程是新会话中唯一的进程
+		2) 此进程成为一个新进程组的组长进程。新进程组ID是该调用进程的ID
+		3) 此进程没有控制终端。如果在调用setsid之前该进程有一个控制终端，那么这种联系也会被中断
+
+	
+	pid_t getsid(pid_t pid);
+	限制: 如果pid并不属于调用所在的会话，那么调用者就不能得到这个会话首进程的进程组ID
+
+
+3. 控制终端
+
+	一个会话可以有一个控制终端。
+	建立与控制终端链接的会话首进程被成为控制进程
+	如果一个会话有控制终端，一个会话中的几个进程组可以分为一个前台进程组和几个后台进程组
+	ctrl+c 将中断信号发送个前台进程组的所有进程
+	ctrl+\ 将退出信号。。。
+		ctrl c ctrl / 区别， ctrl+\ 会产生core文件
+
+	保证程序能读写控制端的方法是打开文件/dev/tty，在内核中，此特殊文件是控制终端的同义语
+
+4. tcgetpgrp gcsetpgrp tcgetsid
+
+	#include <unistd.h>
+	pid_t tcgetpgrp(int fileds);
+	int tcsetpgrp(int fileds, pid_t pgrpid);
+		前台进程组与在filedes上打开的终端相关联
+
+	pid_t tcgetsid(int fileds);
+		给出控制终端tty的文件描述符
+
+5. 作业控制
+	
+	中断字符 ctrl+c 产生SIGINT
+	退出字符 ctrl+\	产生SIGQUIT
+	挂起字符 ctal+z 产生SIGTSTP
+	
+	后台进程尝试读终端，终端程序检测到这种情况，向后台作业发送一个特定的信号  SIGTTIN  。
+	该信号通常会暂停后台作业，shell向有关用户发送这种情况的通知，然后可以将其转化为前台作业运行，
+	发送SIGCONT给前台，然后就可以读终端
+
+	& 后台运行程序
+	jobs 查看后台进程
+	fg 进程移到前台 
+	bg 。。。。后台
+
+6. 孤儿进程组
+
+	POSIX.1要求向新的孤儿进程组中处于停止状态的为一个进程发送挂断信号（SIGHUP），接着有发送继续信号（SIGCONT）。
+	对挂断信号的默认动作是终止进程。除非设置函数捕捉信号
+
+
+	*当后台进程试图读终端，则对后台进程组产生SIGTTIN。但是孤儿进程组，如果内核用此信号停止它，则此进程组中的进程就不再继续
+		此read返回出错，并将errno设置为EIO
+
+
+	
+	
+

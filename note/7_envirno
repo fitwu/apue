@@ -1,0 +1,92 @@
+1. main函数
+	
+	int main(int argc, char *argv[]);
+	
+2. 进程终止8种方式
+	
+	正常终止
+		1) 从main返回
+		2) 调用exit
+		3) 调用 _exit 或 _Exit
+		4) 最后一个线程从其启动例程返回
+		5) 最后一个线程调用pthread_exit
+
+	异常终止
+		1) 调用abort
+		2) 接到一个信号并终止
+		3) 最后一个线程对取消请求作出响应
+
+3. exit _exit _Exit
+	
+	#include<stdlib.c>
+	void exit(int status);
+	void _Exit(int status);
+	
+	#include<unistd.h>
+	void _exit(int status);
+
+	exit() 会进行一些清理处理
+			调用执行各终止处理程序;
+			执行标准i/o库的清理关闭操作,为所有打开流调用 fclose()	
+
+	_exit() _Exit() 直接进入内核
+
+4. atexit函数
+
+	exit调用这些函数的顺序与等级顺序相反
+	同一个程序登记多次,会执行多次
+
+	#include <stdlib.h>
+	int atexit(void (*func)(void));
+
+5. c程序的存储空间布局
+
+	.a
+	ar -v -r 
+	.so
+	gcc -shared -fPIC 
+
+	bbs 在文件中不占实际磁盘
+		加载内存中才开始初始化为0
+
+	 命令行参
+ 	 和环境变量
+		栈
+	
+		堆
+		bbs
+		data
+		text
+
+
+6. 存储器的分配
+	
+	malloc		
+	calloc
+	realloc 
+
+	#include <stdlib.h>
+
+	void *malloc(size_t size);
+	void *calloc(size_t nobj, size size);
+	void *realloc(void *ptr, size_t newsize);
+	
+7. 环境变量
+
+	#incldue<stdlib.h>
+	char *getenv(const char *name);
+
+	int putenv(char *str);
+	int setenv(const char *name, const char *value, int rewrite);
+		若rewrite为 非0 则覆盖
+	int unsetenv(const char *name);
+		删除,若没定义,不出错
+
+8. setjmp longjmp
+
+	#include <setjmp.h>
+	int setjmp(jmp_buf env);
+	void longjmp(jmp_buf env, int val);
+
+	
+		

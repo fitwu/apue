@@ -1,0 +1,152 @@
+1. 标准I/O库 I/O函数
+	
+		I/O函数库--------文件描述符
+			STDIN_FILENO 
+			STDOUT_FILENO
+			STDERR_FILENO
+		标准I/O库--------STREAM(流)
+			stdin 
+			stdout
+			stderr
+
+2. 缓冲
+	
+	全缓冲
+		填满标准缓冲I/O缓冲区之后才进行实际的I/O操作
+		flush冲洗
+	行缓冲
+		在输入输出中遇到换行符,标准I/O库执行I/O操作
+		涉及终端(标准输入标准输出),通常使用行缓冲.
+
+			1) 如果充满缓冲区,即使没有写一个换行符,也进行I/O操作.
+			2) 任何时候,只要是通过标准I/O库要求从一个不带缓冲的流,或者一个行缓冲的流得到数据,
+			那么就造成冲洗所有行缓冲输出流
+	不带缓冲
+		标准出错流通常不带缓冲 stderr
+		
+3. 更改缓冲类型
+	
+	#include<stdio.h>
+	void setbuf(FILE *restrict fp, char *restrict buf);
+	int setvbuf(FILE *restrict fp, char *restrict buf, int mode, size_t size);
+		mode:
+			_IOFBF
+			_IOLBF
+			_IONBF
+
+	setbud  
+		NULL 	不带缓冲
+		非空 	长度为BUFSIZE的用户buf  全缓冲或者行缓冲
+	setvbuf
+		_IOFBF 
+		全缓冲
+			非空 长度为size的用户buf
+			NULL 适合长度的系统缓冲区
+		_IOLBF
+		行缓冲
+			非空 长度为size的用户buf
+			NULL 是和长度的系统缓冲区
+		_IONBF 
+			不带缓冲
+			
+4. 冲刷
+	
+	#include<stdio.h>
+	int fflush(FILE *fp);
+		
+	若fp为NULL,则强制冲刷所有流
+
+5. 打开流
+	
+	#include<stdio.h>
+	FILE *fopen(const char *restrict pathname, const char *restrict type);
+		打开一个指定的文件
+	FILE *freopen(const char *restrict pathnam, const char *restrict type, FILE *restrict fp);
+		在一个指定的流上打开一个指定的文件,若已经打开,先关闭.若已经定向,先清除定向.
+	FILE *fdopen(int filedes, const char *type);	
+		获取一个现有的文件描述符,并是一个标准的I.O流与该描述符相结合.
+
+		type:
+			r rb 	为读打开
+			w wb	把文件截短至0长,或为写而创建
+			a ab	添加;为在文件尾写而打开,或为写而创建
+
+			r+ r+b rb+	为读和写打开
+			w+ w+b wb+	把文件截短至0长,或为读和写打开
+			a+ a+b ab+	为在文件尾读和写而打开或创建
+
+			b 作为区分文本文件和二进制文件
+			对以fdopen,type参数意义稍有不同.因为描述符打开,所以fdopen为写打开并不截短该文件.
+			标准I/O填写方式也不能用于创建该文件
+			
+	
+	#include <stdio.h>
+	int fclose(FILE *fp);
+	
+	当一个进程正常终止时,冲洗所有缓冲数据,为所有打开的标准I/O流都会被关闭
+
+6 读和写流
+
+	1) 读一个字符
+		#include<stdio.h>
+		int getc(FILE *fp);			可以为宏
+		int fgetc(FILE *fp);		必须是函数
+		int getchar(void);			//getc(stdin);
+			三个函数无论是出错还是文件到达尾端,都返回同样的值.
+			int ferror(FILE *fp);
+			int feof(FILE *fp);
+
+			void clearerr(FILE *fp);
+			大多数实现中,为每个流在FILE对象中维持了两个标志:
+				出错标志 文件结束标志
+			调用clearerr清除这两个标志
+
+		int ungetc(int c, FILE *fp);
+		可以将字符再押送回流中
+
+		int putc(int c, FILE *fp);
+		int fputc(int c, FILE *fp);
+		int putchar(int c);
+
+	2) 每次一行
+
+		char *fgets(char *restrict buf, int n, FILE *restrict fp);
+		char *gets(char *buf); 			//不推荐
+			fgets 明确制定缓冲区大小,一直读直到一个换行符,但是不超过n-1个字符,缓冲区以null结尾
+		若返回超过n-1个字符,则会返回一个不完整的行,但是缓冲区以null结尾
+
+			gets并不将换行符存入缓冲区
+
+		int fputs(const char*restrict str, FILE *restrict fp);
+		int puts(const char *str);
+			fputs将一个以null符终止的字符串写到制定的流.为短的终止符null不写出.
+			puts将一个null符终止的字符串写到标准输出,终止符不写.但是,puts然后又将一个换行符写到标准输出.
+
+	3) 二进制
+		
+		#include<stdio.h>
+		size_t fread(void *restrict ptr, size_t size, size_t nobj, FILE *restrict fp);
+		size_t fwrite(const void *restrict ptr, size_t size, size_t nobj, FILE *restrict fp);
+
+
+7. 格式化I/O
+	格式化输出
+	
+	#include<stdio.h>
+	int printf/vprintf		写到标准输出	
+		fprintf/v...		写到指定的流
+		sprintf/v...		写入数组
+		snprintf/v...		
+		
+		v:可变参数表(...)代换成了arg  #include<stdarg.h>
+
+	格式化输入
+
+		scanf vscanf
+		fscanf ...
+		...
+
+8. 实现细节
+	
+	#include<stdio.h>
+	int fileno(FILE *fp);	

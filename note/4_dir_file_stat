@@ -1,0 +1,70 @@
+1.	stat fstat lstat 
+
+	#include <sys/stat.h>
+	int stat(const char*restrict pathname, struct stat* restrict buf);
+	int fstat(int filedes, struct stat *buf);
+	int lstat(const char*restrict pathname, struct stat *restrict buf);	
+
+	stat lstat区别
+		stat对符号链接，查找该符号连接的信息
+		lstat返回链接本身有关信息
+
+2. access 
+	
+	#include <unistd.h>
+	int access(const char *pathname, int mode);
+
+	mode :
+			R_OK
+			W_OK
+			X_OK
+			F_OK: 测试文件是否存在
+
+3. umask 
+	
+	为进程设置文件模式创建屏蔽字,并返回以前的数值
+	
+	#include <sys/stat.h>
+	mode_t umask(mode_t cmask);
+	
+	cmask: S_IRUSR S_IWUSR S_XUSR  GRP OTH.....   其中的若干个位"或"
+
+4. chmod fchmod
+
+	#include <sys/stat.h>
+	chmod(const char* pathname, mode_t mode);
+	fchmod(int filedes, mode_t mode);
+
+	除了9个常规mode,还有三个:	S_ISUID 执行时设置用户ID 
+								S_ISGID 执行时设置组ID
+								S_ISVTX 保存正文(粘住位)
+
+								S_IRWXU = S_IRUSR | S_IWUSR | S_IXUSR
+								S_IRWXG = S_IRGRP | S_IWGRP | S_IXGRP
+								S_IRWXO = S_IROTH | S_IWOTH | S_IXOTH
+											
+
+		## 可以利用stat 获得struct stat buf中的 buf.st_mode   来 或
+	
+5. 文件长度
+	如果复制一个空洞文件,则新文件中空洞会被填满
+
+6. 文件截断
+
+	#include <unistd.h>
+	int truncate(const char *pathname, off_t length);
+	int ftruncate(int filedes, off_t length);
+	
+	把现有文件截短为length字节
+
+7. 硬链接,符号连接
+
+8. 文件的时间
+	st_atime	read  			文件数据最后的访问时间
+	st_mtime	write			文件数据最后的修改时间
+	st_ctime	chmod chown		文件i节点状态的最后更改时间
+
+9. 
+
+
+
